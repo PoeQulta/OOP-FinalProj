@@ -1,0 +1,15 @@
+com\mycompany\platecircus\object\SpaceFighterObject$FireListener.class
+com\mycompany\platecircus\world\GameWorld.class
+com\mycompany\platecircus\world\WorldState.class
+com\mycompany\platecircus\world\HardState.class
+com\mycompany\platecircus\world\Space.class
+com\mycompany\platecircus\object\SpaceFighterObject.class
+com\mycompany\platecircus\object\BubleObject.class
+com\mycompany\platecircus\Main.class
+com\mycompany\platecircus\object\CrossObject.class
+com\mycompany\platecircus\object\ImageObject.class
+com\mycompany\platecircus\object\BarObject.class
+com\mycompany\platecircus\world\MediumState.class
+com\mycompany\platecircus\PlateCircus.class
+com\mycompany\platecircus\object\BallObject.class
+com\mycompany\platecircus\world\EasyState.class
