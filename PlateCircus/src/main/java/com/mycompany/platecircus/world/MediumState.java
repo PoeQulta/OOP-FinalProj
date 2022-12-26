@@ -9,7 +9,7 @@ package com.mycompany.platecircus.world;
  * @author poequ
  */
 public class MediumState implements WorldState {
-     private static final int SPEED = 15;
+     private static final int SPEED = 2;
     @Override
     public int getSpeed() {
         return SPEED;

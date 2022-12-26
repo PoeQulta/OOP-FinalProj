@@ -26,8 +26,8 @@ public class ImageObject implements GameObject{
 		this.type = type;
 		this.visible = true;
 		// create a bunch of buffered images and place into an array, to be displayed sequentially
+                if(path ==null) return;
 		try {
-                    System.out.print(path);
 			spriteImages[0] = ImageIO.read(getClass().getResourceAsStream(path));
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -64,8 +64,8 @@ public class ImageObject implements GameObject{
 
 	@Override
 	public int getWidth(){
-            System.out.print(spriteImages[0].getWidth());
-            return (int) (spriteImages[0].getWidth() * 1.5f);
+         
+            return (int) (spriteImages[0].getWidth());
 	}
 
 	@Override

@@ -8,12 +8,12 @@ import javax.imageio.ImageIO;
 
 public class ClownObject extends ImageObject{
     
-	private static final int MAX_MSTATE = 6;
+	private static final int MAX_MSTATE = 1;
 	// an array of sprite images that are drawn sequentially
 	private BufferedImage[] spriteImages = new BufferedImage[MAX_MSTATE];
-        private static final int HEIGHT = 300;
+        private static final int HEIGHT = 150;
 	public ClownObject(int posX, int posY, String path) {
-		super(posX, posY, "/clown0.png");
+		super(posX, posY, null);
                
                 for(int i=0;i<MAX_MSTATE;i++)
                 {
@@ -35,11 +35,16 @@ public class ClownObject extends ImageObject{
     public void setY(int mY) {
         
     }
-    public static int GetHeight()
+    public static int getHEIGHT()
     {
         return HEIGHT;
     }
-	
+
+    @Override
+    public int getWidth() {
+        return (int)(super.getWidth()*1.5f);
+    }
+    
 	
 
 }
