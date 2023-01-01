@@ -15,7 +15,10 @@ import java.util.List;
 import eg.edu.alexu.csd.oop.game.GameObject;
 import eg.edu.alexu.csd.oop.game.World;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 /**
  *
  * @author poequ
@@ -35,9 +38,10 @@ public class GameWorld implements World {
     private final List<GameObject> constantLst = new LinkedList<GameObject>();
     private final List<GameObject> movingLst = new LinkedList<GameObject>();
     private final List<GameObject> controlLst = new LinkedList<GameObject>();
+    private List <ClownObject> clowns;
     private GameWorld()
     {
-		controlLst.add(new ClownObject(width/3, (int)((height-ClownObject.getHEIGHT())*0.9), "/clown%d.png"));
+		controlLst.add(new ClownObject(width/3, (int)((height-ClownObject.getHEIGHT())*0.9), "/Clown/clown Art%04d.png"));
                 
                 //controlLst.add(new MovingObject(new IntrinsicObject(Color.BLUE,"/plate%d.png",1,50,0),100,400));
                 movingLst.add(MovingObjectFactory.getRandMovingObj(50, -50));
@@ -99,10 +103,23 @@ public class GameWorld implements World {
         if(a[0]==null ||a[1]==null||a[2]==null) return false;
         return a[0].getColor().equals(a[1].getColor()) && a[0].getColor().equals(a[2].getColor());
     }
+    private List<MovingObject> checkColorConnect()
+    {
+      for(ClownObject c : clowns){
+          Map<Color,List<MovingObject>> objs = c.getPlates().stream().collect(Collectors.groupingBy(MovingObject::getColor));
+          Iterator<Map.Entry<Color,List<MovingObject>>> iter = objs.entrySet().iterator();
+          while(iter.hasNext())
+          {
+              Map.Entry<Color,List<MovingObject>> e = iter.next();
+              if(e.getValue().size() >= 3)
+                  return e.getValue();   
+          }
+                    }
+      return null;
+    }
     @Override
     public boolean refresh() {
-        
-        
+        clowns = controlLst.stream().filter(ob -> ob instanceof ClownObject).map(ob -> (ClownObject) ob).toList();
         boolean timeout = System.currentTimeMillis() - startTime > MAX_TIME;// time end and game over
         boolean ObjGenTime = System.currentTimeMillis() - gentime > (OBJ_GEN_TIMEOUT/difState.getSpeed());
         if(ObjGenTime)
@@ -113,10 +130,11 @@ public class GameWorld implements World {
         
         movingLst.removeIf(ob -> ob.getY()>height || !ob.isVisible());
         controlLst.removeIf(ob -> !ob.isVisible());
+        
         movingLst.stream().forEach(
                 (obj) -> {if(obj instanceof MovingObject k) k.Update(getSpeed());}
         );
-        List<GameObject> holder = new ArrayList();
+        List<MovingObject> holder = new ArrayList();
         
         for(int i=0; i<controlLst.size();i++)
         {
@@ -137,7 +155,7 @@ public class GameWorld implements World {
                     };
             holder.addAll(movingLst.stream().filter(ObjCollision).toList());
             holder.stream().forEach(
-                    (ob) -> {if(ob instanceof MovingObject k) k.setFreefall(false);}
+                    (k) -> { k.setFreefall(false);}
             );
             movingLst.removeIf(ObjCollision);
             movingLst.stream().filter(BombCollision).forEach(
@@ -145,15 +163,35 @@ public class GameWorld implements World {
             );
             
         }
+        for(ClownObject c : clowns )
+        {
+            c.getPlates().addAll(holder);
+            c.updatePlates();
+        }
         controlLst.addAll(holder);
-        if(ConsecConnect()){
+        List<MovingObject> plates = checkColorConnect();
+        if(plates !=null)
+        {
+            score+=10;
+            plates.forEach(x -> x.setVisible(false));
+            controlLst.removeIf(x -> x instanceof MovingObject);
+            for(ClownObject c : clowns )
+            {
+                c.updatePlates();
+                movingLst.addAll(c.getPlates());
+                c.getPlates().clear();
+            
+            }
+            
+        }
+       /* if(ConsecConnect()){
             score+=10;
             int lastIndex = controlLst.size()-1;
             for(int i = 0;i<3&&i<lastIndex;i++)
             {
                 if(controlLst.get(lastIndex-i) instanceof MovingObject k) k.setVisible(false);
             }
-        }
+        }*/
 		return !timeout;
     }
 
