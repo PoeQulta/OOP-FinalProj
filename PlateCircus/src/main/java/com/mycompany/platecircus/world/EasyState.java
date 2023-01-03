@@ -8,11 +8,17 @@ package com.mycompany.platecircus.world;
  *
  * @author poequ
  */
-public class EasyState implements WorldState {
+public class EasyState implements WorldStrat {
      private static final int SPEED = 1;
+     private static final int PREVIEW_NUM = 7;
     @Override
     public int getSpeed() {
         return SPEED;
+    }
+
+    @Override
+    public int getPreviewNum() {
+        return PREVIEW_NUM;
     }
     
 }

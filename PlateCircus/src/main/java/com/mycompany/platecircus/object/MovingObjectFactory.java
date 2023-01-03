@@ -15,8 +15,8 @@ import java.util.Optional;
 public class MovingObjectFactory 
 {
     private static Color colors[] = {Color.RED,Color.BLUE,Color.CYAN,Color.GREEN,Color.MAGENTA,Color.ORANGE,Color.PINK,Color.YELLOW};
-    private static String Paths[] = {"/Bomb%d.png","/plate%d.png","/Bowl%d.png"};
-    private static int heights[] = {100,20,30};
+    private static String Paths[] = {"/Bomb%d.png","/Plate%d.png","/Bowl%d.png"};
+    private static int heights[] = {100,30,40};
     private static int frames[] = {1,1,1};
     private static int type[] = {1,0,0};
     private static final ArrayList<IntrinsicObject> intrObj = new ArrayList();

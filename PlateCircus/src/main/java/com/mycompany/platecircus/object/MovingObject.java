@@ -12,7 +12,7 @@ import java.awt.image.BufferedImage;
  *
  * @author poequ
  */
-public class MovingObject implements GameObject {
+public class MovingObject implements GameObject,FrameRefreshObserver {
     private IntrinsicObject IntrnObj;
     private int x;
     private int y;
@@ -71,7 +71,8 @@ public class MovingObject implements GameObject {
 		this.visible = visible;
 	}
 
-    public void Update(int speed)
+    @Override
+    public void update(int speed)
     {
         y+=speed;
     }

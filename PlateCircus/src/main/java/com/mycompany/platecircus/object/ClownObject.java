@@ -21,7 +21,8 @@ public class ClownObject extends ImageObject{
                 plates = new LinkedList<MovingObject>();
                 for(int i=0;i<MAX_MSTATE;i++)
                 {
-                try {
+                try {   
+                        //System.out.println(getClass().getResourceAsStream("/clown Art0012.png"));
                         Image img = ImageIO.read(getClass().getResourceAsStream(String.format(path,2*i))).getScaledInstance(-1, HEIGHT, BufferedImage.SCALE_REPLICATE);
 			spriteImages[i] = new BufferedImage(img.getWidth(null),img.getHeight(null),BufferedImage.TYPE_4BYTE_ABGR);
                         Graphics2D gr = spriteImages[i].createGraphics();

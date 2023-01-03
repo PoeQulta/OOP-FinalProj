@@ -11,6 +11,11 @@
             <artifactId>Engine</artifactId>
             <version>1.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <version>3.3.0</version>
+        </dependency>
     </dependencies>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -18,4 +23,31 @@
         <maven.compiler.target>17</maven.compiler.target>
         <exec.mainClass>com.mycompany.platecircus.PlateCircus</exec.mainClass>
     </properties>
+    <build>
+    <plugins>
+    <plugin>
+    <artifactId>maven-assembly-plugin</artifactId>
+    <version>2.4</version>
+    <configuration>
+    <descriptorRefs>
+    <descriptorRef>jar-with-dependencies</descriptorRef>
+    </descriptorRefs>
+    <archive>
+    <manifest>
+    <mainClass>com.mycompany.platecircus.Main</mainClass>
+    </manifest>
+    </archive>
+    </configuration>
+    <executions>
+    <execution>
+    <id>make-assembly</id>
+    <phase>package</phase>
+    <goals>
+    <goal>single</goal>
+    </goals>
+    </execution>
+    </executions>
+        </plugin>
+        </plugins>
+    </build>
 </project>
