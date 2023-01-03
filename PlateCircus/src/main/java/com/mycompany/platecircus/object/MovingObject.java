@@ -7,6 +7,7 @@ package com.mycompany.platecircus.object;
 import eg.edu.alexu.csd.oop.game.GameObject;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.util.function.Predicate;
 
 /**
  *
@@ -87,5 +88,16 @@ public class MovingObject implements GameObject,FrameRefreshObserver {
     public Color getColor()
     {
         return IntrnObj.getColor();
+    }
+    private boolean intersect(GameObject o1){
+        GameObject o2 = this;
+	return  o1.getX()< o2.getX() + o2.getWidth() && o1.getX() + o1.getWidth() > o2.getX() && o1.getY() < o2.getY() + o2.getHeight() &&  o1.getY() > o2.getY();
+                        
+	}
+    public int ObjCollision(GameObject obj)
+    {
+        if(!intersect(obj)) return 0;
+        if(IntrnObj.getType()==0) return 1;
+        return -1;
     }
 }

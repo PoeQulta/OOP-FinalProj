@@ -5,8 +5,6 @@
 package com.mycompany.platecircus.world;
 import com.mycompany.platecircus.object.ClownObject;
 import com.mycompany.platecircus.object.FrameRefreshObserver;
-import com.mycompany.platecircus.object.ImageObject;
-import com.mycompany.platecircus.object.IntrinsicObject;
 import com.mycompany.platecircus.object.MovingObject;
 import com.mycompany.platecircus.object.MovingObjectFactory;
 import java.awt.Color;
@@ -18,7 +16,6 @@ import eg.edu.alexu.csd.oop.game.World;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 /**
  *
@@ -30,8 +27,6 @@ public class GameWorld implements World {
     private static final int CONTROLSPEED = 10;
     private static int MAX_TIME = 5 * 60 * 1000;
     private static int OBJ_GEN_TIMEOUT = 3 * 1000;
-    private static int SPAWN_RANGE;
-    private static int SPAWN_OFFSET;
     private int score = 0;
     private long endTime, gentime, startTime = System.currentTimeMillis();
     private final int width = 1200;
@@ -40,50 +35,25 @@ public class GameWorld implements World {
     private final List<GameObject> movingLst = new LinkedList<GameObject>();
     private final List<GameObject> controlLst = new LinkedList<GameObject>();
     private List <ClownObject> clowns;
+    List <MovingObject> movingObjHolder;
     int spawnCursor;
     int spawnSelector = 0;
     private GameWorld()
     {
-        
+        //Load Clown
 	controlLst.add(new ClownObject(width/3, (int)((height-ClownObject.getHEIGHT())*0.9), "/clown Art%04d.png"));
         
-        //movingLst.add(MovingObjectFactory.getRandMovingObj(50, -50));
         gentime = System.currentTimeMillis();
-        SPAWN_RANGE = (width-controlLst.get(0).getWidth());
-        SPAWN_OFFSET = controlLst.get(0).getWidth()/2;
         LoadPreviewConstants();
 
     }
+    //Class Methods
+    //+ Singleton Implementation
     public static GameWorld getWorld()
     {
         return instance;
     }
-    private void LoadPreviewConstants()
-    {
-        int spawnCursorL = 0;
-        int spawnCursorR = width;
-        
-        //controlLst.add(new MovingObject(new IntrinsicObject(Color.BLUE,"/plate%d.png",1,50,0),100,400));
-        for(int i = 0;i<difState.getPreviewNum();i++)
-        {
-            MovingObject holder = MovingObjectFactory.getRandMovingObj(50, 100);
-            holder.setY(100 - holder.getHeight());
-            if(i%2==0){
-                spawnCursor = spawnCursorL;
-                spawnCursorL += holder.getWidth();
-               }
-            else
-            {
-                spawnCursorR -= holder.getWidth();
-                spawnCursor = spawnCursorR;
-            }
-            holder.setX(spawnCursor);
-            constantLst.add(0, holder);
-        }
-        spawnCursor =difState.getPreviewNum()-1;
-    }
-    private void updateConstants(){}
-    public static void resetWorld(String dif)
+        public static void resetWorld(String dif)
     {
         if(dif.equalsIgnoreCase("hard"))
             difState = new HardState();
@@ -93,6 +63,11 @@ public class GameWorld implements World {
             difState = new EasyState();
         instance = new GameWorld();
     }
+    
+    
+    //Instance Methods
+        
+    //GameWorld Implementation
     @Override
     public List<GameObject> getConstantObjects() {
         return constantLst;
@@ -117,21 +92,75 @@ public class GameWorld implements World {
     public int getHeight() {
         return height;
     }
-    private boolean intersect(GameObject o1, GameObject o2){
-		return  o1.getX()< o2.getX() + o2.getWidth() && o1.getX() + o1.getWidth() > o2.getX() && o1.getY() < o2.getY() + o2.getHeight() &&  o1.getY() > o2.getY();
-                        
-	}
-//    private boolean ConsecConnect()
-//    {
-//        int lastIndex = controlLst.size()-1;
-//        MovingObject a[] = new MovingObject[3];
-//        for(int i = 0;i<3&&i<lastIndex;i++)
-//        {
-//            if(controlLst.get(lastIndex-i) instanceof MovingObject k) a[i] = k;
-//        }
-//        if(a[0]==null ||a[1]==null||a[2]==null) return false;
-//        return a[0].getColor().equals(a[1].getColor()) && a[0].getColor().equals(a[2].getColor());
-//    }
+    @Override
+    public boolean refresh() {
+        clowns = controlLst.stream().filter(ob -> ob instanceof ClownObject).map(ob -> (ClownObject) ob).toList();
+        movingObjHolder = movingLst.stream().filter(ob -> ob instanceof MovingObject).map(ob -> (MovingObject) ob).toList();
+        boolean timeout = System.currentTimeMillis() - startTime > MAX_TIME;// time end and game over
+        boolean ObjGenTime = System.currentTimeMillis() - gentime > (OBJ_GEN_TIMEOUT/difState.getSpeed());
+        if(ObjGenTime)
+        {
+            updateConstantObjs();
+            gentime = System.currentTimeMillis();
+        }
+        //clean Hidden and Out of range Objects
+        movingLst.removeIf(ob -> ob.getY()>height || !ob.isVisible());
+        controlLst.removeIf(ob -> !ob.isVisible());
+        
+        //Update object Locations for new Frame
+        //Observer-esque 
+        movingLst.stream().forEach(
+                (obj) -> {if(obj instanceof FrameRefreshObserver k) k.update(getSpeed());}
+        );
+        
+        HandleCollisions();
+        
+        //Handle Collected Plates
+        List<MovingObject> plates = checkColorConnect();
+        if(plates !=null)
+        {
+            score+=10;
+            plates.forEach(x -> x.setVisible(false));
+            controlLst.removeIf(x -> x instanceof MovingObject);
+            //Set All Plates for freeFall
+            for(ClownObject c : clowns )
+            {
+                c.updatePlates();
+                movingLst.addAll(c.getPlates());
+                c.getPlates().clear();
+            
+            }
+            
+        }
+		return !timeout;
+    }
+    // GameSpecific Code
+ 
+    //Loads Top ROW @ Level Reset
+    private void LoadPreviewConstants()
+    {
+        int spawnCursorL = 0;
+        int spawnCursorR = width;
+        
+        //controlLst.add(new MovingObject(new IntrinsicObject(Color.BLUE,"/plate%d.png",1,50,0),100,400));
+        for(int i = 0;i<difState.getPreviewNum();i++)
+        {
+            MovingObject holder = MovingObjectFactory.getRandMovingObj(50, 100);
+            holder.setY(100 - holder.getHeight());
+            if(i%2==0){
+                spawnCursor = spawnCursorL;
+                spawnCursorL += holder.getWidth();
+               }
+            else
+            {
+                spawnCursorR -= holder.getWidth();
+                spawnCursor = spawnCursorR;
+            }
+            holder.setX(spawnCursor);
+            constantLst.add(0, holder);
+        }
+        spawnCursor =difState.getPreviewNum()-1;
+    }
     private List<MovingObject> checkColorConnect()
     {
       for(ClownObject c : clowns){
@@ -146,8 +175,15 @@ public class GameWorld implements World {
                     }
       return null;
     }
+    //handle New Plate Generation
     private void updateConstantObjs()
-    {   
+    {   if(!constantLst.isEmpty()){
+                if(constantLst.get(0) instanceof MovingObject Tempholder){
+                    Tempholder.setFreefall(true);      
+                    constantLst.remove(0);
+                    movingLst.add(Tempholder);
+                    
+             
         if(constantLst.isEmpty())return;
         MovingObject holder = MovingObjectFactory.getRandMovingObj(50, 100);
         holder.setY(100 - holder.getHeight());
@@ -168,91 +204,34 @@ public class GameWorld implements World {
             }
         }
         
-        constantLst.add(holder);
-                }
-    @Override
-    public boolean refresh() {
-        clowns = controlLst.stream().filter(ob -> ob instanceof ClownObject).map(ob -> (ClownObject) ob).toList();
-        boolean timeout = System.currentTimeMillis() - startTime > MAX_TIME;// time end and game over
-        boolean ObjGenTime = System.currentTimeMillis() - gentime > (OBJ_GEN_TIMEOUT/difState.getSpeed());
-        if(ObjGenTime)
-        {
-            if(!constantLst.isEmpty()){
-                if(constantLst.get(0) instanceof MovingObject holder){
-                    holder.setFreefall(true);      
-                    constantLst.remove(0);
-                    movingLst.add(holder);
-                    updateConstantObjs();
-             }
-            }
-             gentime = System.currentTimeMillis();
+            constantLst.add(holder);
         }
-        
-        movingLst.removeIf(ob -> ob.getY()>height || !ob.isVisible());
-        controlLst.removeIf(ob -> !ob.isVisible());
-        
-        movingLst.stream().forEach(
-                (obj) -> {if(obj instanceof FrameRefreshObserver k) k.update(getSpeed());}
-        );
+    }
+}
+    private void HandleCollisions()
+    {
+        //Collision Handeling 
         List<MovingObject> holder = new ArrayList();
-        
         for(int i=0; i<controlLst.size();i++)
         {
-            GameObject obj = controlLst.get(i);
-            Predicate ObjCollision = (ob) -> {
-                        if(ob instanceof MovingObject k)
-                        {
-                            return intersect(obj,k) && k.getType()==0;
-                        }
-                    return false;
-                    };
-            Predicate BombCollision = (ob) -> {
-                        if(ob instanceof MovingObject k)
-                        {
-                            return intersect(obj,k) && k.getType()==1;
-                        }
-                    return false;
-                    };
-            holder.addAll(movingLst.stream().filter(ObjCollision).toList());
+            GameObject obj = controlLst.get(i);    
+            holder.addAll(movingObjHolder.stream().filter(ob -> ob.ObjCollision(obj)==1).toList());
             holder.stream().forEach(
                     (k) -> { k.setFreefall(false);}
             );
-            movingLst.removeIf(ObjCollision);
-            movingLst.stream().filter(BombCollision).forEach(
-                    (ob) -> {if(ob instanceof MovingObject k) k.setVisible(false); score = Math.max(0, score-10);}
+            movingLst.removeAll(holder);
+            movingObjHolder.stream().filter(ob -> ob.ObjCollision(obj)==-1).forEach(
+                    (ob) -> { ob.setVisible(false); score = Math.max(0, score-10);}
             );
             
         }
+        //Update Clowns & ControLst
         for(ClownObject c : clowns )
         {
             c.getPlates().addAll(holder);
             c.updatePlates();
         }
         controlLst.addAll(holder);
-        List<MovingObject> plates = checkColorConnect();
-        if(plates !=null)
-        {
-            score+=10;
-            plates.forEach(x -> x.setVisible(false));
-            controlLst.removeIf(x -> x instanceof MovingObject);
-            for(ClownObject c : clowns )
-            {
-                c.updatePlates();
-                movingLst.addAll(c.getPlates());
-                c.getPlates().clear();
-            
-            }
-            
-        }
-       /* if(ConsecConnect()){
-            score+=10;
-            int lastIndex = controlLst.size()-1;
-            for(int i = 0;i<3&&i<lastIndex;i++)
-            {
-                if(controlLst.get(lastIndex-i) instanceof MovingObject k) k.setVisible(false);
-            }
-        }*/
-		return !timeout;
     }
 
     @Override

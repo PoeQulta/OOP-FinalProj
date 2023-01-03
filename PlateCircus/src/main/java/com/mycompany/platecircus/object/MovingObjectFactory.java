@@ -22,8 +22,8 @@ public class MovingObjectFactory
     private static final ArrayList<IntrinsicObject> intrObj = new ArrayList();
     public static MovingObject getRandMovingObj(int x,int y)
     {
-        int colorInt = (int) Math.round(Math.random()*7);
-        int ObjSprite = (int) Math.round(Math.random()*2);
+        int colorInt = (int) Math.round(Math.random()*(colors.length-1));
+        int ObjSprite = (int) Math.round(Math.random()*(Paths.length-1));
         Optional<IntrinsicObject> objHolder = intrObj.stream().filter(obj -> obj.getColor().equals(colors[colorInt]) && obj.getPath().equals(Paths[ObjSprite])).findFirst();
         IntrinsicObject obj;
         if(objHolder.isEmpty())

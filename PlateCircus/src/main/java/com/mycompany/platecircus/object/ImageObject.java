@@ -7,7 +7,7 @@ import javax.imageio.ImageIO;
 
 import eg.edu.alexu.csd.oop.game.GameObject;
 
-public class ImageObject implements GameObject{
+public abstract class ImageObject implements GameObject{
 	private static final int MAX_MSTATE = 1;
 	// an array of sprite images that are drawn sequentially
 	private BufferedImage[] spriteImages = new BufferedImage[MAX_MSTATE];

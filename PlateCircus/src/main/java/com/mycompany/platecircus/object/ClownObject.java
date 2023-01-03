@@ -14,7 +14,7 @@ public class ClownObject extends ImageObject{
 	private static final int MAX_MSTATE = 19;
 	// an array of sprite images that are drawn sequentially
 	private BufferedImage[] spriteImages = new BufferedImage[MAX_MSTATE];
-        private static final int HEIGHT = 150;
+        private static final int HEIGHT = 200;
         private List<MovingObject> plates;
 	public ClownObject(int posX, int posY, String path) {
 		super(posX, posY, null);
